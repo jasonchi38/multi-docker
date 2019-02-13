@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jasonchi/react-test -f ./client/Dockerfile.dev ./client 
+
+script:
+  - docker run jasonchi/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jasonchi/multi-client ./client 
+  - docker build -t jasonchi/multi-nginx ./nginx
+  - docker build -t jasonchi/multi-server ./server
+  - docker build -t jasonchi/multi-worker ./worker
+  #login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take thos images and push them to docker hub
+  - docker push jasonchi/multi-client
+  - docker push jasonchi/multi-nginx
+  - docker push jasonchi/multi-server
+  - docker push jasonchi/multi-worker
+  
